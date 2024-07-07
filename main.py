@@ -8,16 +8,23 @@ from tensorflow.keras.layers import Dense
 # Load the dataset
 data = pd.read_csv('electric_car.csv')
 
-# Assuming the CSV has headers; if not, add headers accordingly
-data.columns = [
-    'Year', 'Make', 'Model', 'Vehicle Class', 'Fuel Consumption City (L/100km)',
-    'Fuel Consumption Hwy (L/100km)', 'Fuel Consumption Comb (L/100km)',
-    'Fuel Consumption Comb (mpg)', 'CO2 Emissions (g/km)', 'CO2 Rating', 'Smog Rating'
-]
+# Display the first few rows of the dataframe to inspect the columns
+print(data.head())
+print(data.columns)
 
-# Select relevant features and target variable
-features = data[['Fuel Consumption City (L/100km)', 'Fuel Consumption Hwy (L/100km)', 'Fuel Consumption Comb (L/100km)']]
-target = data['CO2 Emissions (g/km)']
+# Display data types of columns
+print(data.dtypes)
+
+# Select relevant numeric features and target variable
+numeric_columns = ['City (kWh/100 km)', 'Highway (kWh/100 km)', 'Combined (kWh/100 km)', 'CO2 emissions (g/km)']
+data = data[numeric_columns]
+
+# Drop rows with missing values in these columns
+data = data.dropna()
+
+# Separate features and target
+features = data[['City (kWh/100 km)', 'Highway (kWh/100 km)', 'Combined (kWh/100 km)']]
+target = data['CO2 emissions (g/km)']
 
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
@@ -48,3 +55,4 @@ y_pred = model.predict(X_test)
 
 # Display first few predictions
 print(y_pred[:5])
+
