@@ -1,58 +1,131 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 
-# Load the dataset
-data = pd.read_csv('electric_car.csv')
 
-# Display the first few rows of the dataframe to inspect the columns
-print(data.head())
-print(data.columns)
+class ElectricCarEmissionModel:
+    """
+    A class used to represent an Electric Car Emission Model
 
-# Display data types of columns
-print(data.dtypes)
+    ...
 
-# Select relevant numeric features and target variable
-numeric_columns = ['City (kWh/100 km)', 'Highway (kWh/100 km)', 'Combined (kWh/100 km)', 'CO2 emissions (g/km)']
-data = data[numeric_columns]
+    Attributes
+    ----------
+    file_path : str
+        a formatted string to define the path of csv file
+    data : DataFrame
+        a pandas DataFrame to store the dataset
+    X_train : DataFrame
+        a pandas DataFrame for the input training set
+    X_test : DataFrame
+        a pandas DataFrame for the input testing set
+    y_train : DataFrame/Series
+        a pandas DataFrame or Series for the target training set
+    y_test : DataFrame/Series
+        a pandas DataFrame or Series for the target testing set
+    model : Object
+        a Sequential object from keras
 
-# Drop rows with missing values in these columns
-data = data.dropna()
+    Methods
+    -------
+    load_data():
+        Loads the data from csv file and preprocess it (like drops NaN values).
 
-# Separate features and target
-features = data[['City (kWh/100 km)', 'Highway (kWh/100 km)', 'Combined (kWh/100 km)']]
-target = data['CO2 emissions (g/km)']
+    split_data():
+        Splits the loaded data into input and target sets and also split them into training and testing sets.
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+    normalize_data():
+        Function to normalize the training and test input data.
 
-# Normalize the data
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+    build_model():
+        Function to initialize a Sequential model.
 
-# Build the model
-model = Sequential()
-model.add(Dense(64, input_dim=X_train.shape[1], activation='relu'))
-model.add(Dense(32, activation='relu'))
-model.add(Dense(1))  # Output layer for regression
+    compile_model():
+        Function to compile the defined model.
 
-# Compile the model
-model.compile(optimizer='adam', loss='mean_squared_error')
+    train_model():
+        Function to train the model using the training set data.
 
-# Train the model
-history = model.fit(X_train, y_train, epochs=100, validation_split=0.2, batch_size=10)
+    evaluate_model():
+        Function to evaluate the model performance using test set data.
 
-# Evaluate the model
-loss = model.evaluate(X_test, y_test)
-print(f'Test loss: {loss}')
+    predict():
+        Function to predict target using the test input data.
+    """
 
-# Make predictions
-y_pred = model.predict(X_test)
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.data = None
+        self.X_train = None
+        self.X_test = None
+        self.y_train = None
+        self.y_test = None
+        self.model = None
 
-# Display first few predictions
-print(y_pred[:5])
+    def load_data(self):
+        """Loads and pre-processes the data from the file path."""
+        self.data = pd.read_csv(self.file_path)
+        numeric_columns = ['City (kWh/100 km)',
+                           'Highway (kWh/100 km)',
+                           'Combined (kWh/100 km)',
+                           'CO2 emissions (g/km)']
+        self.data = self.data[numeric_columns]
+        self.data = self.data.dropna()
 
+    def split_data(self):
+        """Splits the data into input and target datasets for training and testing."""
+        features = self.data[['City (kWh/100 km)',
+                              'Highway (kWh/100 km)',
+                              'Combined (kWh/100 km)']]
+        target = self.data['CO2 emissions (g/km)']
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            features, target, test_size=0.2, random_state=42)
+
+    def normalize_data(self):
+        """Normalizes the input data using StandardScaler."""
+        scaler = StandardScaler()
+        self.X_train = scaler.fit_transform(self.X_train)
+        self.X_test = scaler.transform(self.X_test)
+
+    def build_model(self):
+        """Builds a Sequential model with two dense layers and one output layer."""
+        self.model = Sequential()
+        self.model.add(Dense(64, input_dim=self.X_train.shape[1],
+                             activation='relu'))  # Input layer
+        self.model.add(Dense(32, activation='relu'))  # Hidden layer
+        self.model.add(Dense(1))  # Output layer for regression
+
+    def compile_model(self):
+        """Compiles the model with 'adam' optimizer and 'mean_squared_error' as loss function."""
+        self.model.compile(optimizer='adam', loss='mean_squared_error')
+
+    def train_model(self):
+        """Trains the model on the training data."""
+        self.model.fit(self.X_train, self.y_train,
+                       epochs=100,
+                       validation_split=0.2,
+                       batch_size=10)
+
+    def evaluate_model(self):
+        """Evaluates the model's performance using the test set data."""
+        loss = self.model.evaluate(self.X_test, self.y_test)
+        print(f'Test loss: {loss}')
+
+    def predict(self):
+        """Makes predictions using the test input data."""
+        y_pred = self.model.predict(self.X_test)
+        print(y_pred[:5])
+
+
+if __name__ == "__main__":
+    model = ElectricCarEmissionModel('electric_car.csv')
+    model.load_data()
+    model.split_data()
+    model.normalize_data()
+    model.build_model()
+    model.compile_model()
+    model.train_model()
+    model.evaluate_model()
+    model.predict()
